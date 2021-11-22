@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     MaterialButton btn, copy;
     TextInputLayout edit_text;
-    TextView result, status, target_lan_tv;
+    TextView result, status, target_lan_tv, download_status, download_des;
     String source_text;
     LinearLayout load, lan_pop;
     ImageView donate, help, delete_iv;
@@ -52,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
         copy = findViewById(R.id.copy);
         lan_pop = findViewById(R.id.lan_pop);
 
+        download_status = findViewById(R.id.download_status);
+        download_des = findViewById(R.id.download_des);
+
         donate = findViewById(R.id.donate);
         help = findViewById(R.id.help);
         delete_iv = findViewById(R.id.delete_iv);
@@ -61,13 +64,13 @@ public class MainActivity extends AppCompatActivity {
 
         help.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("https://worldinova.code.blog/help/translate"));
+            intent.setData(Uri.parse("https://worldinova.web.app/support.html"));
             startActivity(intent);
         });
 
         donate.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("https://worldinova.code.blog/doanate/translate"));
+            intent.setData(Uri.parse("https://worldinova.web.app/diamond.html"));
             startActivity(intent);
         });
 
@@ -385,23 +388,34 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         final Translator englishGermanTranslator = Translation.getClient(options);
-
         DownloadConditions conditions = new DownloadConditions.Builder().build();
-        englishGermanTranslator.downloadModelIfNeeded(conditions).addOnSuccessListener(unused ->
 
-                englishGermanTranslator.translate(source_text)
-                        .addOnSuccessListener(s -> {
-                            result.setText(s);
-                            load.setVisibility(View.GONE);
-                            load.setAnimation(fade_out);
-                        })
-                        .addOnFailureListener(e -> {
-                            Toast.makeText(getApplicationContext(), "Fail to translate.try online", Toast.LENGTH_SHORT).show();
-                            load.setVisibility(View.GONE);
-                            load.setAnimation(fade_out);
-                        }))
+        download_status.setText("Downloading...");
+        download_des.setText("It seem to like using a language for the first time, we will need to download the required libraries. Therefore, having an internet connection is essential.It make couple of time");
 
-                .addOnFailureListener(e -> {
+        englishGermanTranslator.downloadModelIfNeeded(conditions).addOnSuccessListener(unused -> {
+
+            download_status.setText("Translating...");
+            download_des.setText("Apparently your phone already has the required language packages, so it will translate in a matter of seconds.");
+
+
+            englishGermanTranslator.translate(source_text)
+
+                    .addOnSuccessListener(s -> {
+                        result.setText(s);
+                        load.setVisibility(View.GONE);
+                        load.setAnimation(fade_out);
+
+                    }).addOnFailureListener(e -> {
+
+                        Toast.makeText(getApplicationContext(), "Fail to translate.try online", Toast.LENGTH_SHORT).show();
+                        load.setVisibility(View.GONE);
+                        load.setAnimation(fade_out);
+
+                    });
+
+
+        }).addOnFailureListener(e -> {
                     // Model couldn’t be downloaded or other internal error.
                     Toast.makeText(getApplicationContext(), "Seem to like fist time package.try online", Toast.LENGTH_SHORT).show();
                     load.setVisibility(View.GONE);
@@ -418,13 +432,13 @@ public class MainActivity extends AppCompatActivity {
 
         modelManager.deleteDownloadedModel(Model).
                 addOnSuccessListener(unused ->
-                Toast.makeText(getApplicationContext(), "Successfully deleted.next time downloading is mandatory", Toast.LENGTH_SHORT).show())
+                        Toast.makeText(getApplicationContext(), "Successfully deleted.next time downloading is mandatory", Toast.LENGTH_SHORT).show())
 
                 .addOnFailureListener(e -> {
-            // Error.
-            Toast.makeText(getApplicationContext(), "Fail to deleted library.try another language", Toast.LENGTH_SHORT).show();
+                    // Error.
+                    Toast.makeText(getApplicationContext(), "Fail to deleted library.try another language", Toast.LENGTH_SHORT).show();
 
-        });
+                });
 
     }
 }

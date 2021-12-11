@@ -179,7 +179,8 @@
                             android:inputType="textMultiLine"
                             android:maxLength="50000"
                             android:textColor="@color/white"
-                            android:textColorHint="@color/white" />
+                            android:textColorHint="@color/white"
+                            tools:ignore="TouchTargetSizeCheck" />
 
 
                     </com.google.android.material.textfield.TextInputLayout>

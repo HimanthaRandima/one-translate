@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
@@ -28,15 +30,19 @@ import com.google.mlkit.nl.translate.Translation;
 import com.google.mlkit.nl.translate.Translator;
 import com.google.mlkit.nl.translate.TranslatorOptions;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
+    private static final int SPEECH_REQUEST_CODE = 0;
     MaterialButton btn, copy;
     TextInputLayout edit_text;
     TextView result, status, target_lan_tv, download_status, download_des;
     String source_text;
     LinearLayout load, lan_pop;
-    ImageView donate, help, delete_iv;
+    ImageView help, delete_iv;
     Animation fade_in, fade_out;
+    CardView voice_typing_btn,image_typing_btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,22 +61,35 @@ public class MainActivity extends AppCompatActivity {
         download_status = findViewById(R.id.download_status);
         download_des = findViewById(R.id.download_des);
 
-        donate = findViewById(R.id.donate);
+
         help = findViewById(R.id.help);
         delete_iv = findViewById(R.id.delete_iv);
+
+        voice_typing_btn = findViewById(R.id.voice_typing_btn);
+        image_typing_btn = findViewById(R.id.image_typing_btn);
 
         fade_in = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_in_bottom);
         fade_out = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_out_bottom);
 
-        help.setOnClickListener(v -> {
+        Intent get_intent = getIntent();
+        if (get_intent != null && get_intent.getData() != null) {
+            String task_text = getIntent().getExtras().get("task_text").toString();
+            edit_text.getEditText().setText(task_text);
+        }
+
+        voice_typing_btn.setOnClickListener(v -> {
+            displaySpeechRecognizer();
+        });
+
+        image_typing_btn.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("https://worldinova.web.app/support.html"));
+            intent.setData(Uri.parse("https://worldinova.web.app/aivision"));
             startActivity(intent);
         });
 
-        donate.setOnClickListener(v -> {
+        help.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("https://worldinova.web.app/diamond.html"));
+            intent.setData(Uri.parse("https://worldinova.web.app/support.html"));
             startActivity(intent);
         });
 
@@ -408,19 +427,19 @@ public class MainActivity extends AppCompatActivity {
 
                     }).addOnFailureListener(e -> {
 
-                        Toast.makeText(getApplicationContext(), "Fail to translate.try online", Toast.LENGTH_SHORT).show();
-                        load.setVisibility(View.GONE);
-                        load.setAnimation(fade_out);
+                Toast.makeText(getApplicationContext(), "Fail to translate.try online", Toast.LENGTH_SHORT).show();
+                load.setVisibility(View.GONE);
+                load.setAnimation(fade_out);
 
-                    });
+            });
 
 
         }).addOnFailureListener(e -> {
-                    // Model couldn’t be downloaded or other internal error.
-                    Toast.makeText(getApplicationContext(), "Seem to like fist time package.try online", Toast.LENGTH_SHORT).show();
-                    load.setVisibility(View.GONE);
-                    load.setAnimation(fade_out);
-                });
+            // Model couldn’t be downloaded or other internal error.
+            Toast.makeText(getApplicationContext(), "Seem to like fist time package.try online", Toast.LENGTH_SHORT).show();
+            load.setVisibility(View.GONE);
+            load.setAnimation(fade_out);
+        });
 
     }
 
@@ -440,5 +459,29 @@ public class MainActivity extends AppCompatActivity {
 
                 });
 
+    }
+
+    // Create an intent that can start the Speech Recognizer activity
+    private void displaySpeechRecognizer() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+// This starts the activity and populates the intent with the speech text.
+        startActivityForResult(intent, SPEECH_REQUEST_CODE);
+    }
+
+    // This callback is invoked when the Speech Recognizer returns.
+// This is where you process the intent and extract the speech text from the intent.
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode,
+                                    Intent data) {
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
+            List<String> results = data.getStringArrayListExtra(
+                    RecognizerIntent.EXTRA_RESULTS);
+            String spokenText = results.get(0);
+            // Do something with spokenText.
+            edit_text.getEditText().setText(spokenText);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
